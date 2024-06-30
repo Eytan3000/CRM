@@ -1,0 +1,5 @@
+node_modules
+config.env
+*.sql
+userModel2.js
+*.DS_Store
