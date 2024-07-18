@@ -1,13 +1,13 @@
 const db = require('../db');
 const { validateEmail } = require('../helpers');
 
-const { person: Person } = require('../models/userModel');
+const { person: Person } = require('../models/models');
 
 exports.createPerson = async (req, res) => {
   try {
     const result = await Person.create(req.body);
     res.status(200).json({
-      status: 'sucess',
+      status: 'success',
       message: result.rows,
     });
   } catch (err) {
@@ -23,7 +23,7 @@ exports.getAllPersons = async (req, res) => {
     const result = await Person.findAll(req.query);
 
     res.status(200).json({
-      status: 'sucess',
+      status: 'success',
       message: result.rows,
     });
   } catch (err) {
@@ -39,7 +39,7 @@ exports.getPerson = async (req, res) => {
   try {
     const result = await Person.findById(id);
     res.status(200).json({
-      status: 'sucess',
+      status: 'success',
       message: result.rows,
     });
   } catch (err) {
@@ -54,7 +54,7 @@ exports.updatePerson = async (req, res) => {
   try {
     const result = await Person.findByIdAndUpdate(req.params.id, req.body);
     res.status(200).json({
-      status: 'sucess',
+      status: 'success',
       message: result.rows,
     });
   } catch (err) {
@@ -68,7 +68,7 @@ exports.deletePerson = async (req, res) => {
   try {
     const result = await Person.findByIdAndDelete(req.params.id);
     res.status(200).json({
-      status: 'sucess',
+      status: 'success',
       message: result.rows,
     });
   } catch (err) {

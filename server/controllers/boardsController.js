@@ -1,12 +1,12 @@
 const db = require('../db');
 
-const { board: Board } = require('../models/userModel');
+const { board: Board } = require('../models/models');
 
 exports.createBoard = async (req, res) => {
   try {
     const result = await Board.create(req.body);
     res.status(200).json({
-      status: 'sucess',
+      status: 'success',
       message: result.rows,
     });
   } catch (err) {
@@ -22,7 +22,7 @@ exports.getAllboards = async (req, res) => {
     const result = await Board.findAll(req.query);
 
     res.status(200).json({
-      status: 'sucess',
+      status: 'success',
       message: result.rows,
     });
   } catch (err) {
@@ -38,7 +38,7 @@ exports.getBoard = async (req, res) => {
   try {
     const result = await Board.findById(id);
     res.status(200).json({
-      status: 'sucess',
+      status: 'success',
       message: result.rows,
     });
   } catch (err) {
@@ -53,7 +53,7 @@ exports.updateBoard = async (req, res) => {
   try {
     const result = await Board.findByIdAndUpdate(req.params.id, req.body);
     res.status(200).json({
-      status: 'sucess',
+      status: 'success',
       message: result.rows,
     });
   } catch (err) {
@@ -67,7 +67,7 @@ exports.deleteBoard = async (req, res) => {
   try {
     const result = await Board.findByIdAndDelete(req.params.id);
     res.status(200).json({
-      status: 'sucess',
+      status: 'success',
       message: result.rows,
     });
   } catch (err) {
