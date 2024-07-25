@@ -1,26 +1,8 @@
 import db from './db';
 import Joi from 'joi';
-
-const userSchema = Joi.object({
-  username: Joi.string().min(3).required(),
-  email: Joi.string().email().required(),
-  password: Joi.string().min(3).required(),
-});
-const personSchema = Joi.object({
-  id: Joi.string(),
-  name: Joi.string(),
-  email: Joi.string().email(),
-  phone: Joi.string(),
-  website: Joi.string(),
-  facebook: Joi.string(),
-  linkedin: Joi.string(),
-  link: Joi.string(),
-  hebrew_name: Joi.string(),
-});
-const boardSchema = Joi.object({
-  id: Joi.string(),
-  title: Joi.string(),
-});
+import { userSchema, personSchema, boardSchema } from './schemas';
+import AppError from '../utils/appErrors';
+import { hashPassword, hasPassword } from './dbUtils';
 
 export interface QueryParams {
   [key: string]: string | number | undefined;
@@ -121,7 +103,23 @@ class DatabaseRepository<T extends Record<string, any>> {
 
   #validate(body: any) {
     const { error } = this.schema.validate(body);
-    if (error) throw new Error('Validation Error');
+    // console.log('error: ',error) //removeEytan
+    if (error) throw new Error('Validation Error' + error);
+  }
+  #validateSomeForUpdate(body: any) {
+    // Define the schema for the specific property
+    const values = Object.values(body);
+    let message = '';
+
+    Object.keys(body).forEach((key, index) => {
+      const { error } = this.schema.extract(key).validate(values[index]);
+      if (error) {
+        console.log(error.details[0].message.replace('value', key));
+        message += error.details[0].message.replace('value', key) + '. ';
+      }
+    });
+
+    if (message !== '') throw new AppError(message, 400);
   }
 
   #isAllowedColumn(column: string) {
@@ -140,8 +138,13 @@ class DatabaseRepository<T extends Record<string, any>> {
     }, {} as QueryParams);
   }
 
-  create(body: T) {
+  async create(body: T) {
     this.#validate(body);
+
+    if (hasPassword(body)) {
+      body.password = await hashPassword(body.password);
+    }
+
     const columns = Object.keys(body).join(', ');
     const placeholders = Object.keys(body)
       .map((_, index) => `$${index + 1}`)
@@ -164,6 +167,9 @@ class DatabaseRepository<T extends Record<string, any>> {
   async findByIdAndUpdate(id: string, body: T) {
     const columns = Object.keys(body);
     const values = Object.values(body);
+
+    // this.#validate(body);
+    this.#validateSomeForUpdate(body);
 
     if (columns.some((column) => !this.#isAllowedColumn(column))) {
       throw new Error('Incorrect body');
