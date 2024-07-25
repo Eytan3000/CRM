@@ -4,3 +4,4 @@ config.env
 userModel2.js
 userModel3.js
 *.DS_Store
+dist/
