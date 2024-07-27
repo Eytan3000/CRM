@@ -2,7 +2,15 @@ import db from './db';
 import Joi from 'joi';
 import { userSchema, personSchema, boardSchema } from './schemas';
 import AppError from '../utils/appErrors';
-import { hashPassword, hasPassword } from './dbUtils';
+import { hasPassword } from '../utils/helpers';
+import { hashPassword } from '../utils/authFunctions';
+
+export interface UserBody {
+  username: string;
+  email: string;
+  password: string;
+  role: string;
+}
 
 export interface QueryParams {
   [key: string]: string | number | undefined;
@@ -101,12 +109,12 @@ class DatabaseRepository<T extends Record<string, any>> {
     this.allowedSearchKeys = allowedSearchKeys;
   }
 
-  #validate(body: any) {
+  #validate(body: T) {
     const { error } = this.schema.validate(body);
     // console.log('error: ',error) //removeEytan
     if (error) throw new Error('Validation Error' + error);
   }
-  #validateSomeForUpdate(body: any) {
+  #validateSomeForUpdate(body: T) {
     // Define the schema for the specific property
     const values = Object.values(body);
     let message = '';
@@ -125,9 +133,11 @@ class DatabaseRepository<T extends Record<string, any>> {
   #isAllowedColumn(column: string) {
     return this.allowedSearchKeys.includes(column);
   }
+
   #validateQueryParams(queryObj: Record<string, any>) {
     return Object.keys(queryObj).some((key) => !this.#isAllowedColumn(key));
   }
+
   #excludeFields(queryParams: QueryParams) {
     const excludedFields = ['page', 'sort', 'limit', 'fields', 'join', 'on'];
     return Object.keys(queryParams).reduce((acc, key) => {
@@ -136,6 +146,10 @@ class DatabaseRepository<T extends Record<string, any>> {
       }
       return acc;
     }, {} as QueryParams);
+  }
+
+  private excludePassword(rows: T[]) {
+    return rows.map(({ password, ...rest }) => rest);
   }
 
   async create(body: T) {
@@ -157,6 +171,11 @@ class DatabaseRepository<T extends Record<string, any>> {
   findById(id: string | number) {
     const query = `SELECT * FROM ${this.tableName} WHERE id=$1`;
     return db.query(query, [id]);
+  }
+
+  findByEmail(email: string) {
+    const query = `SELECT * FROM ${this.tableName} WHERE email=$1`;
+    return db.query(query, [email]);
   }
 
   findByIdAndDelete(id: string) {
@@ -235,6 +254,9 @@ class DatabaseRepository<T extends Record<string, any>> {
       .offset(offsetValue);
 
     const { query, values } = builder.build();
+    // const result = await db.query(query, values);
+    // result.rows = this.excludePassword(result.rows);
+    // return result;
     return db.query(query, values);
   }
 }
@@ -243,16 +265,18 @@ export class Factory {
   constructor() {}
 
   static userRepository() {
-    const allowedKeys = ['id', 'username', 'email', 'password'];
+    const allowedKeys = ['id', 'username', 'email', 'role'];
 
-    interface UserBody {
-      username: string;
-      email: string;
-      password: string;
-    }
+    // interface UserBody {
+    //   username: string;
+    //   email: string;
+    //   password: string;
+    //   role: string;
+    // }
 
     return new DatabaseRepository<UserBody>('users', userSchema, allowedKeys);
   }
+
   static personRepository() {
     const allowedKeys = [
       'id',

@@ -7,6 +7,7 @@ const userSchema = Joi.object({
   // passwordConfirm: Joi.string().valid(Joi.ref('password')).required().messages({
   //   'any.only': 'Passwords do not match',
   // }),
+  role: Joi.string(),
 });
 
 const personSchema = Joi.object({

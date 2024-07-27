@@ -1,9 +1,9 @@
 import { Pool } from 'pg';
 
+const port = process.env.DB_PORT;
 // make sure port is number
-const port = process.env.DB_PORT
-  ? parseInt(process.env.DB_PORT, 10)
-  : undefined;
+// ? parseInt(process.env.DB_PORT, 10)
+// : undefined;
 
 const pool = new Pool({
   user: process.env.DB_USER,
