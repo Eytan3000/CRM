@@ -14,7 +14,12 @@ declare global {
       DB_DATABASE: string;
 
       JWT_SECRET: string;
-      JWT_EXPIRE_IN;
+      JWT_EXPIRE_IN: string;
+
+      EMAIL_USERNAME: string;
+      EMAIL_PASSWORD: string;
+      EMAIL_HOST: string;
+      EMAIL_PORT: number;
     }
   }
 }

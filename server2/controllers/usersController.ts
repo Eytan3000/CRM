@@ -1,8 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
-import { QueryParams, Factory } from '../database/databaseRepository';
+import { QueryParams } from '../database/databaseManager';
 import catchAsync from '../utils/catchAsync';
 import AppError from '../utils/appErrors';
-import { excludePassword } from '../utils/helpers';
+
+import { Factory } from '../database/Factory';
+import { excludePassword } from '../utils/authFunctions';
 
 const User = Factory.userRepository();
 

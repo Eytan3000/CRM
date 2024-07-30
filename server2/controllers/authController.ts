@@ -1,14 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
-import { Factory } from '../database/databaseRepository';
 import catchAsync from '../utils/catchAsync';
 import AppError from '../utils/appErrors';
-import { excludePassword } from '../utils/helpers';
 import {
   changedPasswordAfter,
   checkPassword,
+  creatPasswordResetToken,
+  excludePassword,
   getDecodedJwt,
   getJwtToken,
 } from '../utils/authFunctions';
+import { Factory } from '../database/Factory';
+import { sendEmail } from '../utils/email';
 
 const User = Factory.userRepository();
 
@@ -126,9 +128,54 @@ const restrictTo = (...roles: string[]) => {
   };
 };
 
+const forgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  // 1) get user based on posted email
+  const {
+    rows: [user],
+  } = await User.findByEmail(req.body.email);
+
+  if (!user) {
+    return next(new AppError('There is no user with that email address', 404));
+  }
+
+  // 2) genrate random token
+  const { resetToken, passwordResetToken, passwordResetExpires } =
+    creatPasswordResetToken();
+
+  User.findByIdAndUpdate(user.id, {
+    password_reset_token: passwordResetToken,
+    password_reset_expires: passwordResetExpires,
+  });
+
+  // 3) send it to the user's email
+  try {
+    await sendEmail(user.email, req, resetToken);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token sent to email!',
+    });
+  } catch (err) {
+    const body = {
+      password_reset_token: undefined,
+      password_reset_expires: undefined,
+    };
+
+    // await user.save({ validateBeforeSave: false });
+    await User.findByIdAndUpdate(user.id, body);
+
+    return next(new AppError('Error sending email.', 500));
+  }
+};
+
 export default {
   signup,
   login,
   protect,
   restrictTo,
+  forgotPassword,
 };

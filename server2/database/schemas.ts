@@ -8,6 +8,8 @@ const userSchema = Joi.object({
   //   'any.only': 'Passwords do not match',
   // }),
   role: Joi.string(),
+  password_reset_token: Joi.string(),
+  password_reset_expires: Joi.number(),
 });
 
 const personSchema = Joi.object({

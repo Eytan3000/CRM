@@ -1,16 +1,15 @@
 import db from './db';
 import Joi from 'joi';
-import { userSchema, personSchema, boardSchema } from './schemas';
 import AppError from '../utils/appErrors';
-import { hasPassword } from '../utils/helpers';
-import { hashPassword } from '../utils/authFunctions';
 
-export interface UserBody {
-  username: string;
-  email: string;
-  password: string;
-  role: string;
-}
+import { hashPassword, hasPassword } from '../utils/authFunctions';
+
+// export interface UserBody {
+//   username: string;
+//   email: string;
+//   password: string;
+//   role: string;
+// }
 
 export interface QueryParams {
   [key: string]: string | number | undefined;
@@ -94,7 +93,7 @@ class QueryBuilder {
   }
 }
 
-class DatabaseRepository<T extends Record<string, any>> {
+export class DatabaseManager<T extends Record<string, any>> {
   private tableName: string;
   private schema: Joi.Schema;
   private allowedSearchKeys: string[];
@@ -111,7 +110,7 @@ class DatabaseRepository<T extends Record<string, any>> {
 
   #validate(body: T) {
     const { error } = this.schema.validate(body);
-    // console.log('error: ',error) //removeEytan
+
     if (error) throw new Error('Validation Error' + error);
   }
   #validateSomeForUpdate(body: T) {
@@ -146,10 +145,6 @@ class DatabaseRepository<T extends Record<string, any>> {
       }
       return acc;
     }, {} as QueryParams);
-  }
-
-  private excludePassword(rows: T[]) {
-    return rows.map(({ password, ...rest }) => rest);
   }
 
   async create(body: T) {
@@ -187,12 +182,7 @@ class DatabaseRepository<T extends Record<string, any>> {
     const columns = Object.keys(body);
     const values = Object.values(body);
 
-    // this.#validate(body);
     this.#validateSomeForUpdate(body);
-
-    if (columns.some((column) => !this.#isAllowedColumn(column))) {
-      throw new Error('Incorrect body');
-    }
 
     const coumnsAndValueNums = columns
       .map((column, index) => `${column} = $${index + 2}`)
@@ -254,45 +244,12 @@ class DatabaseRepository<T extends Record<string, any>> {
       .offset(offsetValue);
 
     const { query, values } = builder.build();
-    // const result = await db.query(query, values);
-    // result.rows = this.excludePassword(result.rows);
-    // return result;
     return db.query(query, values);
   }
 }
 
-export class Factory {
-  constructor() {}
-
-  static userRepository() {
-    const allowedKeys = ['id', 'username', 'email', 'role'];
-
-    // interface UserBody {
-    //   username: string;
-    //   email: string;
-    //   password: string;
-    //   role: string;
-    // }
-
-    return new DatabaseRepository<UserBody>('users', userSchema, allowedKeys);
-  }
-
-  static personRepository() {
-    const allowedKeys = [
-      'id',
-      'name',
-      'email',
-      'phone',
-      'website',
-      'facebook',
-      'linkedin',
-      'link',
-      'hebrew_name',
-    ];
-    return new DatabaseRepository('persons', personSchema, allowedKeys);
-  }
-  static boardRepository() {
-    const allowedKeys = ['title'];
-    return new DatabaseRepository('boards', boardSchema, allowedKeys);
-  }
-}
+// class UserDatabaseManager extends DatabaseManager<UserBody> {
+//   constructor() {
+//     super();
+//   }
+// }

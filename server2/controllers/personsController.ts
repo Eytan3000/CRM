@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { QueryParams, Factory } from '../database/databaseRepository';
+import { QueryParams } from '../database/databaseManager';
+import { Factory } from '../database/Factory';
 
 const Person = Factory.personRepository();
 
